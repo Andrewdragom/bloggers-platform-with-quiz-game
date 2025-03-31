@@ -5,9 +5,9 @@ export const ExtractUserFromRequest = createParamDecorator(
     const request = context.switchToHttp().getRequest();
 
     const user = request.user;
-    if (!user) {
-      throw new Error('there is no user in the request object!');
-    }
+    // if (!user) {
+    //   throw new Error('there is no user in the request object!');
+    // }
 
     return user;
   },
