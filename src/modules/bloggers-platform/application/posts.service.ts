@@ -12,6 +12,7 @@ import { LikeStatusForPostsRepositoryPostgres } from '../infrastructure/postgres
 import { BlogsQueryRepositoryTypeOrm } from '../infrastructure/typeOrm/blogs.queryRepositoryTypeOrm';
 import { PostsMapper } from './mappers/posts.mapper';
 import { PostsQueryRepositoryTypeOrm } from '../infrastructure/typeOrm/posts.queryRepositoryTypeOrm';
+import { LikeStatusForPostsQueryRepositoryTypeOrm } from '../infrastructure/typeOrm/likeStatusForPost.queryRepositoryTypeOrm';
 
 @Injectable()
 export class PostsService {
@@ -32,6 +33,8 @@ export class PostsService {
     @Inject(PostsMapper) protected postsMapper: PostsMapper,
     @Inject(PostsQueryRepositoryTypeOrm)
     protected postsQueryRepositoryTypeOrm: PostsQueryRepositoryTypeOrm,
+    @Inject(LikeStatusForPostsQueryRepositoryTypeOrm)
+    protected likeStatusForPostsQueryRepositoryTypeOrm: LikeStatusForPostsQueryRepositoryTypeOrm,
   ) {}
   async findPosts(
     pageNumber: number,
@@ -45,77 +48,7 @@ export class PostsService {
       pageSize,
       sortBy,
       sortDirection,
-    );
-    // const filterPosts = await Promise.all(
-    //   allPosts.map(async (el) => {
-    //     const like = await this.likeStatusForPostsRepositoryPostgres.countLike(
-    //       el.id,
-    //       'Like',
-    //     );
-    //     const disLike =
-    //       await this.likeStatusForPostsRepositoryPostgres.countLike(
-    //         el.id,
-    //         'Dislike',
-    //       );
-    //     let myStatus = 'None';
-    //     if (userId) {
-    //       const post =
-    //         await this.likeStatusForPostsRepositoryPostgres.getStatus(
-    //           el.id,
-    //           userId,
-    //         );
-    //       myStatus = post ? post!.likeStatus : myStatus;
-    //     }
-    //     const lastLike3 =
-    //       await this.likeStatusForPostsRepositoryPostgres.getLast3Likes(el.id);
-    //     const filterLikes = await Promise.all(
-    //       lastLike3.map(async (el) => {
-    //         const userLogin = await this.usersService.findUserById(el.userId);
-    //         const like = {
-    //           addedAt: el.addedAt,
-    //           userId: el.userId,
-    //           login: userLogin?.login,
-    //         };
-    //         return like;
-    //       }),
-    //     );
-    //
-    //     const post = {
-    //       id: el.id,
-    //       title: el.title,
-    //       shortDescription: el.shortDescription,
-    //       content: el.content,
-    //       blogId: el.blogId,
-    //       blogName: el.blogName,
-    //       createdAt: el.createdAt,
-    //       extendedLikesInfo: {
-    //         likesCount: like,
-    //         dislikesCount: disLike,
-    //         myStatus: myStatus,
-    //         newestLikes: filterLikes,
-    //       },
-    //     };
-    //     return post;
-    //   }),
-    // );
-    const filterPosts = await Promise.all(
-      foundPosts.map(async (el) => {
-        return {
-          id: el.id,
-          title: el.title,
-          shortDescription: el.shortDescription,
-          content: el.content,
-          blogId: el.blog.id,
-          blogName: el.blog.name,
-          createdAt: el.createdAt,
-          extendedLikesInfo: {
-            likesCount: 0,
-            dislikesCount: 0,
-            myStatus: 'None',
-            newestLikes: [],
-          },
-        };
-      }),
+      userId,
     );
     const postCount = await this.postsQueryRepositoryTypeOrm.getPostsCount();
 
@@ -124,49 +57,55 @@ export class PostsService {
       page: pageNumber,
       pageSize,
       totalCount: postCount,
-      items: filterPosts,
+      items: foundPosts,
     };
   }
   async findPostById(id: string | null | undefined, userId: string | null) {
-    const foundPost = await this.postsQueryRepositoryTypeOrm.findPostById(id);
+    const foundPost =
+      await this.postsQueryRepositoryTypeOrm.findPostByIdRaw(id);
     if (!foundPost) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
-    // const like = await this.likeStatusForPostsRepositoryPostgres.countLike(
-    //   foundPost.id,
-    //   'Like',
-    // );
-    // const disLike = await this.likeStatusForPostsRepositoryPostgres.countLike(
-    //   foundPost.id,
-    //   'Dislike',
-    // );
-    // let myStatus = 'None';
-    // if (userId) {
-    //   const post = await this.likeStatusForPostsRepositoryPostgres.getStatus(
-    //     foundPost.id,
-    //     userId,
-    //   );
-    //   myStatus = post ? post!.likeStatus : myStatus;
-    // }
-    //
-    // const lastLike3 =
-    //   await this.likeStatusForPostsRepositoryPostgres.getLast3Likes(
-    //     foundPost.id,
-    //   );
-    //
-    // const filterLikes = await Promise.all(
-    //   lastLike3.map(async (el) => {
-    //     const userLogin = await this.usersService.findUserById(el.userId);
-    //     const like = {
-    //       addedAt: el.addedAt,
-    //       userId: el.userId,
-    //       login: userLogin?.login,
-    //     };
-    //     return like;
-    //   }),
-    // );
+    let myStatus = 'None';
+    if (userId) {
+      const post =
+        await this.likeStatusForPostsQueryRepositoryTypeOrm.getStatus(
+          foundPost.id,
+          userId,
+        );
+      myStatus = post ? post!.likeStatus : myStatus;
+    }
 
-    return this.postsMapper.toViewAfterCreate(foundPost);
+    const lastLike3 =
+      await this.likeStatusForPostsQueryRepositoryTypeOrm.getLast3Likes(
+        foundPost.id,
+      );
+
+    const filterLikes = await Promise.all(
+      lastLike3.map(async (el) => {
+        return {
+          addedAt: el.addedAt,
+          userId: el.userId,
+          login: el.login,
+        };
+      }),
+    );
+
+    return {
+      id: foundPost.id,
+      title: foundPost.title,
+      shortDescription: foundPost.shortDescription,
+      content: foundPost.content,
+      blogId: foundPost.blogId,
+      blogName: foundPost.blogName,
+      createdAt: foundPost.createdAt,
+      extendedLikesInfo: {
+        likesCount: Number(foundPost.likesCount),
+        dislikesCount: Number(foundPost.dislikesCount),
+        myStatus: myStatus,
+        newestLikes: filterLikes,
+      },
+    };
   }
   async createNewPost(body: CreatePostDto) {
     const getBlog = await this.blogsRepositoryPostgres.findBlogById(

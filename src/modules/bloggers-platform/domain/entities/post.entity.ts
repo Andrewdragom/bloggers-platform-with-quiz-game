@@ -1,12 +1,23 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryColumn,
+} from 'typeorm';
 import { BaseEntity } from '../../../../core/domain/entities/base.entity';
 import { Blog } from './blog.entity';
 import { CreatePostDto } from '../../api/input-dto/dto-posts/create-post.dto';
 import { CreatePostByBlogInputDto } from '../../api/input-dto/dto-blogs/create-post-by-blog-input-dto';
 import { UpdatePostDto } from '../../api/input-dto/dto-posts/update-post.dto';
+import { Comment } from './comment.entity';
+import { LikeForPost } from './likeForPost.entity';
 
 @Entity()
 export class Post extends BaseEntity {
+  @PrimaryColumn('uuid')
+  id: string;
   @Column()
   title: string;
   @Column()
@@ -19,6 +30,14 @@ export class Post extends BaseEntity {
   })
   @JoinColumn({ name: 'blogId' })
   blog: Blog;
+  @Column()
+  blogId: string;
+
+  @OneToMany(() => Comment, (comment) => comment.post)
+  comments: Comment[];
+
+  @OneToMany(() => LikeForPost, (likeForPost) => likeForPost.post)
+  likes: LikeForPost[];
 
   static createInstancePost(
     dto: CreatePostDto | CreatePostByBlogInputDto,

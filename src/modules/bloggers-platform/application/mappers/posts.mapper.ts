@@ -25,4 +25,27 @@ export class PostsMapper {
 
     return dto;
   }
+  toViewFindById(
+    post: Post,
+    countLike: number,
+    countDislike: number,
+    status: 'Like' | 'Dislike',
+  ): PostsViewDto {
+    const dto = new PostsViewDto();
+    const dtoExtendedLikesInfo = new ExtendedLikesInfo();
+    dto.id = post.id;
+    dto.title = post.title;
+    dto.shortDescription = post.shortDescription;
+    dto.content = post.content;
+    dto.blogId = post.blog.id;
+    dto.blogName = post.blog.name;
+    dto.createdAt = post.createdAt;
+    dtoExtendedLikesInfo.likesCount = countLike;
+    dtoExtendedLikesInfo.dislikesCount = countDislike;
+    dtoExtendedLikesInfo.myStatus = status ? status : 'None';
+    dtoExtendedLikesInfo.newestLikes = [];
+    dto.extendedLikesInfo = dtoExtendedLikesInfo;
+
+    return dto;
+  }
 }

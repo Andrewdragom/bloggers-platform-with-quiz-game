@@ -74,7 +74,6 @@ export class CommentsRepositoryPostgres {
         createdAt: comment.createdAt,
       };
     });
-    console.log(mapAllComments);
     return mapAllComments;
   }
   async getCommentsCountForPost(id: string | null | undefined) {

@@ -27,6 +27,9 @@ import { UsersService } from '../../users-account/application/users.service';
 import { JwtAuthGuardWithoutError } from '../../users-account/guards/bearer/jwt-auth-without-error.guard';
 import { CreateLikeStatusInputDto } from './input-dto/dto-likes/like-status-input.dto';
 import { AuthGuardBasicAuth } from '../../users-account/guards/basic/basic-auth.guard';
+import { CommandBus } from '@nestjs/cqrs';
+import { CreateCommentCommand } from '../application/use-cases/comments/create-comment-use-case';
+import { SendLikeStatusForPostCommand } from '../application/use-cases/posts/send-like-status-for-post-use-case';
 
 @Controller('posts')
 export class PostsController {
@@ -35,6 +38,7 @@ export class PostsController {
     @Inject(PostsService) protected postsService: PostsService,
     @Inject(CommentsService) protected commentsService: CommentsService,
     @Inject(UsersService) protected usersService: UsersService,
+    @Inject(CommandBus) protected commandBus: CommandBus,
   ) {}
   @UseGuards(JwtAuthGuardWithoutError)
   @Get()
@@ -58,49 +62,22 @@ export class PostsController {
   ) {
     return await this.postsService.findPostById(id, user ? user.userId : null);
   }
-  @UseGuards(AuthGuardBasicAuth)
-  @Post()
-  async createPost(@Body() body: CreatePostDto) {
-    const newPost = await this.postsService.createNewPost(body);
 
-    return newPost;
-  }
-  @UseGuards(AuthGuardBasicAuth)
-  @Delete(':id')
-  @HttpCode(204)
-  async deletePost(@Param('id') id: string) {
-    return this.postsService.deletePostById(id);
-  }
-  @UseGuards(AuthGuardBasicAuth)
-  @Put(':id')
-  @HttpCode(204)
-  async updatePost(@Param('id') id: string, @Body() body: CreatePostDto) {
-    return this.postsService.updatePost(id, body);
-  }
   @UseGuards(JwtAuthGuardWithoutError)
   @Get(':id/comments')
   async getCommentsByPostId(
-    @Query() query: GetPostsQueryParams,
+    @Query() query: GetPostsQueryDto,
     @Param('id') id: string,
     @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto,
   ) {
-    const pageNumber = query.pageNumber ? +query.pageNumber : 1;
-    const pageSize = query.pageSize ? +query.pageSize : 10;
-    const sortBy = query.sortBy ? query.sortBy.toString() : 'createdAt';
-    const sortDirection =
-      query.sortDirection && query.sortDirection.toString() === 'asc'
-        ? 'asc'
-        : 'desc';
-    const getPost = await this.postsService.findPostById(id, null);
-    const allComments = await this.commentsService.getCommentsByPostId(
-      getPost.id,
-      pageNumber,
-      pageSize,
-      sortBy,
-      sortDirection,
+    return await this.commentsService.getCommentsByPostId(
+      id,
+      query.pageNumber,
+      query.pageSize,
+      query.sortBy,
+      query.sortDirection,
       user ? user.userId : null,
     );
-    return allComments;
   }
   @UseGuards(JwtAuthGuard)
   @Post(':id/comments')
@@ -109,9 +86,9 @@ export class PostsController {
     @Body() body: CreateCommentInputDto,
     @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto,
   ) {
-    const getPost = await this.postsService.findPostById(id, null);
-    const getUser = await this.usersService.findUserById(user.userId);
-    return this.commentsService.createNewComment(body.content, id, getUser);
+    return this.commandBus.execute(
+      new CreateCommentCommand(body, id, user.userId),
+    );
   }
   @UseGuards(JwtAuthGuard)
   @Put(':id/like-status')
@@ -121,7 +98,25 @@ export class PostsController {
     @Body() body: CreateLikeStatusInputDto,
     @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto,
   ) {
-    const getPost = await this.postsService.findPostById(id, null);
-    return this.postsService.sendLikeStatus(id, user.userId, body.likeStatus);
+    return this.commandBus.execute(
+      new SendLikeStatusForPostCommand(id, user.userId, body.likeStatus),
+    );
   }
+  // @UseGuards(AuthGuardBasicAuth)
+  // @Put(':id')
+  // @HttpCode(204)
+  // async updatePost(@Param('id') id: string, @Body() body: CreatePostDto) {
+  //   return this.postsService.updatePost(id, body);
+  // }
+  // @UseGuards(AuthGuardBasicAuth)
+  // @Delete(':id')
+  // @HttpCode(204)
+  // async deletePost(@Param('id') id: string) {
+  //   return this.postsService.deletePostById(id);
+  // }
+  // @UseGuards(AuthGuardBasicAuth)
+  // @Post()
+  // async createPost(@Body() body: CreatePostDto) {
+  //   return await this.postsService.createNewPost(body);
+  // }
 }

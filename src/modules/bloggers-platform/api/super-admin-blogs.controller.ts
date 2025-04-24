@@ -31,10 +31,7 @@ import { UpdateBlogCommand } from '../application/use-cases/blogs/update-blog-us
 import { CreatePostCommand } from '../application/use-cases/posts/create-post-use-case';
 import { PostsViewDto } from './view-dto/dto-posts/posts-view.dto';
 import { DeletePostCommand } from '../application/use-cases/posts/delete-post-use-case';
-import {
-  UpdatePostCommand,
-  UpdatePostUseCase,
-} from '../application/use-cases/posts/update-post-use-case';
+import { UpdatePostCommand } from '../application/use-cases/posts/update-post-use-case';
 import { UpdatePostDto } from './input-dto/dto-posts/update-post.dto';
 
 @Controller('sa/blogs')

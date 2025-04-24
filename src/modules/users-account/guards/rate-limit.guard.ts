@@ -17,8 +17,8 @@ export class RateLimitGuard implements CanActivate {
     const route = req.path; // Учитываем маршрут
     const key = `rate-limit:${ip}:${route}`; // Разделяем лимиты по эндпоинтам
 
-    const maxRequests = 50; // 5 запросов
-    const timeWindow = 1000; // 10 секунд
+    const maxRequests = 500; // 5 запросов
+    const timeWindow = 10000; // 10 секунд
 
     const requestCount = await this.redisService.increment(key, timeWindow);
 

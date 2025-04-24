@@ -79,6 +79,7 @@ const CommandHandlers = [CreateUserUseCase, DeleteUserUseCase];
     ]),
     JwtModule,
     UsersService,
+    UsersRepositoryTypeOrm,
   ],
 })
 export class UserAccountModule {}

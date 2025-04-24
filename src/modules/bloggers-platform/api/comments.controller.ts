@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpException,
   Inject,
   Param,
   Put,
@@ -18,6 +17,10 @@ import { JwtAuthGuard } from '../../users-account/guards/bearer/jwt-auth.guard';
 import { UsersService } from '../../users-account/application/users.service';
 import { CreateLikeStatusInputDto } from './input-dto/dto-likes/like-status-input.dto';
 import { JwtAuthGuardWithoutError } from '../../users-account/guards/bearer/jwt-auth-without-error.guard';
+import { CommandBus } from '@nestjs/cqrs';
+import { SendLikeStatusForCommentCommand } from '../application/use-cases/comments/send-like-status-for-comment-use-case';
+import { UpdateCommentCommand } from '../application/use-cases/comments/update-comment-use-case';
+import { DeleteCommentCommand } from '../application/use-cases/comments/delete-comment-use-case';
 
 @Controller('comments')
 export class CommentsController {
@@ -25,18 +28,18 @@ export class CommentsController {
     @Inject(CommentsService)
     protected commentsService: CommentsService,
     @Inject(UsersService) protected usersService: UsersService,
+    @Inject(CommandBus) protected commandBus: CommandBus,
   ) {}
   @UseGuards(JwtAuthGuardWithoutError)
   @Get(':id')
-  async getComments(
+  async getCommentById(
     @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto,
     @Param('id') id: string,
   ) {
-    const getComment = await this.commentsService.getCommentById(
+    return await this.commentsService.getCommentById(
       id,
       user ? user.userId : null,
     );
-    return getComment;
   }
   @UseGuards(JwtAuthGuard)
   @Put(':id')
@@ -46,15 +49,9 @@ export class CommentsController {
     @Body() body: CreateCommentInputDto,
     @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto,
   ) {
-    const getComment = await this.commentsService.getCommentById(
-      id,
-      user.userId,
+    return this.commandBus.execute(
+      new UpdateCommentCommand(id, body.content, user.userId),
     );
-    const getUser = await this.usersService.findUserById(user.userId);
-    if (getComment.commentatorInfo.userLogin != getUser.login) {
-      throw new HttpException('', 403);
-    }
-    return this.commentsService.updateCommentById(id, body.content);
   }
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
@@ -63,15 +60,7 @@ export class CommentsController {
     @Param('id') id: string,
     @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto,
   ) {
-    const getComment = await this.commentsService.getCommentById(
-      id,
-      user.userId,
-    );
-    const getUser = await this.usersService.findUserById(user.userId);
-    if (getComment.commentatorInfo.userLogin != getUser.login) {
-      throw new HttpException('', 403);
-    }
-    return this.commentsService.deleteCommentById(id);
+    return this.commandBus.execute(new DeleteCommentCommand(id, user.userId));
   }
   @UseGuards(JwtAuthGuard)
   @Put(':id/like-status')
@@ -81,12 +70,8 @@ export class CommentsController {
     @Body() body: CreateLikeStatusInputDto,
     @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto,
   ) {
-    const getComment = await this.commentsService.getCommentById(id, null);
-
-    return this.commentsService.sendLikeStatus(
-      id,
-      user.userId,
-      body.likeStatus,
+    return this.commandBus.execute(
+      new SendLikeStatusForCommentCommand(id, user.userId, body.likeStatus),
     );
   }
 }

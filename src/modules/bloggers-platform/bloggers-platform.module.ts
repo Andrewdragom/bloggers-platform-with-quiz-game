@@ -38,6 +38,21 @@ import { CreatePostUseCase } from './application/use-cases/posts/create-post-use
 import { PostsQueryRepositoryTypeOrm } from './infrastructure/typeOrm/posts.queryRepositoryTypeOrm';
 import { DeletePostUseCase } from './application/use-cases/posts/delete-post-use-case';
 import { UpdatePostUseCase } from './application/use-cases/posts/update-post-use-case';
+import { Comment } from './domain/entities/comment.entity';
+import { CommentsRepositoryTypeOrm } from './infrastructure/typeOrm/comments.repositoryTypeOrm';
+import { CreateCommentUseCase } from './application/use-cases/comments/create-comment-use-case';
+import { CommentMapper } from './application/mappers/comment.mapper';
+import { CommentsQueryRepositoryTypeOrm } from './infrastructure/typeOrm/comments.queryRepositoryTypeOrm';
+import { LikeStatusForCommentsQueryRepositoryTypeOrm } from './infrastructure/typeOrm/likeStatusForComments.queryRepositoryTypeOrm';
+import { LikesForComment } from './domain/entities/likeForComment.entity';
+import { LikeStatusForCommentsRepositoryTypeOrm } from './infrastructure/typeOrm/likeStatusForComments.repositoryTypeOrm';
+import { SendLikeStatusForCommentUseCase } from './application/use-cases/comments/send-like-status-for-comment-use-case';
+import { UpdateCommentUseCase } from './application/use-cases/comments/update-comment-use-case';
+import { DeleteCommentUseCase } from './application/use-cases/comments/delete-comment-use-case';
+import { LikeForPost } from './domain/entities/likeForPost.entity';
+import { LikeStatusForPostsQueryRepositoryTypeOrm } from './infrastructure/typeOrm/likeStatusForPost.queryRepositoryTypeOrm';
+import { LikeStatusForPostsRepositoryTypeOrm } from './infrastructure/typeOrm/likeStatusForPost.repository';
+import { SendLikeStatusForPostUseCase } from './application/use-cases/posts/send-like-status-for-post-use-case';
 
 const CommandHandlers = [
   CreateBlogUseCase,
@@ -46,6 +61,11 @@ const CommandHandlers = [
   CreatePostUseCase,
   DeletePostUseCase,
   UpdatePostUseCase,
+  CreateCommentUseCase,
+  SendLikeStatusForCommentUseCase,
+  UpdateCommentUseCase,
+  DeleteCommentUseCase,
+  SendLikeStatusForPostUseCase,
 ];
 
 @Module({
@@ -69,7 +89,13 @@ const CommandHandlers = [
       },
     ]),
     UserAccountModule,
-    TypeOrmModule.forFeature([Blog, Post]),
+    TypeOrmModule.forFeature([
+      Blog,
+      Post,
+      Comment,
+      LikesForComment,
+      LikeForPost,
+    ]),
     CqrsModule,
   ],
   controllers: [
@@ -99,6 +125,13 @@ const CommandHandlers = [
     PostRepositoryTypeOrm,
     PostsMapper,
     PostsQueryRepositoryTypeOrm,
+    CommentsRepositoryTypeOrm,
+    CommentMapper,
+    CommentsQueryRepositoryTypeOrm,
+    LikeStatusForCommentsQueryRepositoryTypeOrm,
+    LikeStatusForCommentsRepositoryTypeOrm,
+    LikeStatusForPostsQueryRepositoryTypeOrm,
+    LikeStatusForPostsRepositoryTypeOrm,
   ],
   exports: [
     MongooseModule.forFeature([

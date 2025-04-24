@@ -3,6 +3,9 @@ import { LikeStatusRepository } from '../infrastructure/mongoDb/like-status.repo
 import { CommentsRepository } from '../infrastructure/mongoDb/comments.repository';
 import { CommentsRepositoryPostgres } from '../infrastructure/postgres/comments.repositoryPostgres';
 import { LikeStatusForCommentsRepositoryPostgres } from '../infrastructure/postgres/like-status-for-comments.repositoryPostgres';
+import { CommentsQueryRepositoryTypeOrm } from '../infrastructure/typeOrm/comments.queryRepositoryTypeOrm';
+import { LikeStatusForCommentsQueryRepositoryTypeOrm } from '../infrastructure/typeOrm/likeStatusForComments.queryRepositoryTypeOrm';
+import { PostsQueryRepositoryTypeOrm } from '../infrastructure/typeOrm/posts.queryRepositoryTypeOrm';
 
 @Injectable()
 export class CommentsService {
@@ -15,35 +18,45 @@ export class CommentsService {
     protected commentsRepositoryPostgres: CommentsRepositoryPostgres,
     @Inject(LikeStatusForCommentsRepositoryPostgres)
     protected likeStatusForCommentsRepositoryPostgres: LikeStatusForCommentsRepositoryPostgres,
+    @Inject(CommentsQueryRepositoryTypeOrm)
+    protected commentsQueryRepositoryTypeOrm: CommentsQueryRepositoryTypeOrm,
+    @Inject(LikeStatusForCommentsQueryRepositoryTypeOrm)
+    protected likeStatusForCommentsQueryRepositoryTypeOrm: LikeStatusForCommentsQueryRepositoryTypeOrm,
+    @Inject(PostsQueryRepositoryTypeOrm)
+    protected postsQueryRepositoryTypeOrm: PostsQueryRepositoryTypeOrm,
   ) {}
   async getCommentById(commentId: string, userId: string | null | undefined) {
     const foundComment =
-      await this.commentsRepositoryPostgres.findCommentById(commentId);
+      await this.commentsQueryRepositoryTypeOrm.findCommentById(commentId);
     if (!foundComment)
       throw new NotFoundException(`Comment with ID ${commentId} not found`);
-    const like = await this.likeStatusForCommentsRepositoryPostgres.countLike(
-      foundComment.id,
-      'Like',
-    );
+    const like =
+      await this.likeStatusForCommentsQueryRepositoryTypeOrm.countLike(
+        foundComment.id,
+        'Like',
+      );
     const disLike =
-      await this.likeStatusForCommentsRepositoryPostgres.countLike(
+      await this.likeStatusForCommentsQueryRepositoryTypeOrm.countLike(
         foundComment.id,
         'Dislike',
       );
     let myStatus = 'None';
     if (userId) {
       const comment =
-        await this.likeStatusForCommentsRepositoryPostgres.getStatus(
+        await this.likeStatusForCommentsQueryRepositoryTypeOrm.getStatus(
           foundComment.id,
           userId,
         );
       myStatus = comment ? comment!.likeStatus : myStatus;
     }
 
-    const comment = {
+    return {
       id: foundComment.id,
       content: foundComment.content,
-      commentatorInfo: foundComment.commentatorInfo,
+      commentatorInfo: {
+        userId: foundComment.userId,
+        userLogin: foundComment.userLogin,
+      },
       createdAt: foundComment.createdAt,
       likesInfo: {
         likesCount: like,
@@ -51,7 +64,6 @@ export class CommentsService {
         myStatus: myStatus,
       },
     };
-    return comment;
   }
   async getCommentsByPostId(
     id: string,
@@ -61,8 +73,13 @@ export class CommentsService {
     sortDirection: string,
     userId: string | null,
   ) {
+    const getPost = await this.postsQueryRepositoryTypeOrm.findPostById(id);
+    if (!getPost) {
+      throw new NotFoundException(`Post with ID ${id} not found`);
+    }
+
     const foundComments =
-      await this.commentsRepositoryPostgres.findCommentByPostId(
+      await this.commentsQueryRepositoryTypeOrm.findCommentByPostId(
         id,
         pageNumber,
         pageSize,
@@ -72,19 +89,19 @@ export class CommentsService {
     const filterComments2 = await Promise.all(
       foundComments.map(async (comment) => {
         let myStatus = 'None';
-        const like =
-          await this.likeStatusForCommentsRepositoryPostgres.countLike(
-            comment.id,
-            'Like',
-          );
-        const disLike =
-          await this.likeStatusForCommentsRepositoryPostgres.countLike(
-            comment.id,
-            'Dislike',
-          );
+        // const like =
+        //   await this.likeStatusForCommentsRepositoryPostgres.countLike(
+        //     comment.id,
+        //     'Like',
+        //   );
+        // const disLike =
+        //   await this.likeStatusForCommentsRepositoryPostgres.countLike(
+        //     comment.id,
+        //     'Dislike',
+        //   );
         if (userId) {
           const commentForStatus =
-            await this.likeStatusForCommentsRepositoryPostgres.getStatus(
+            await this.likeStatusForCommentsQueryRepositoryTypeOrm.getStatus(
               comment.id,
               userId,
             );
@@ -92,42 +109,31 @@ export class CommentsService {
           myStatus = commentForStatus ? commentForStatus!.likeStatus : myStatus;
         }
         const comments = {
-          id: comment.id ? comment.id : 'None',
-          content: comment.content ? comment.content : 'None',
-          commentatorInfo: comment.commentatorInfo
-            ? comment.commentatorInfo
-            : 'None',
-          createdAt: comment.createdAt ? comment.createdAt : 'None',
+          id: comment.id,
+          content: comment.content,
+          commentatorInfo: {
+            userId: comment.userId,
+            userLogin: comment.userLogin,
+          },
+          createdAt: comment.createdAt,
           likesInfo: {
-            likesCount: like ? like : 0,
-            dislikesCount: disLike ? disLike : 0,
-            myStatus: myStatus ? myStatus : 'None',
+            dislikesCount: Number(comment.dislikesCount),
+            likesCount: Number(comment.likesCount),
+            myStatus: myStatus,
           },
         };
         return comments;
       }),
     );
     const commentsCount =
-      await this.commentsRepositoryPostgres.getCommentsCountForPost(id);
+      await this.commentsQueryRepositoryTypeOrm.getCommentsCountForPost(id);
 
     return {
       pagesCount: Math.ceil(commentsCount / pageSize),
       page: pageNumber,
       pageSize,
       totalCount: commentsCount,
-      items: filterComments2
-        ? filterComments2
-        : {
-            id: 'None',
-            content: 'None',
-            commentatorInfo: 'None',
-            createdAt: 'None',
-            likesInfo: {
-              likesCount: 0,
-              dislikesCount: 0,
-              myStatus: 'None',
-            },
-          },
+      items: filterComments2,
     };
   }
   async createNewComment(content: string, postId: string, user: any) {

@@ -20,4 +20,7 @@ export class PostsViewDto {
   blogName: string;
   createdAt: Date;
   extendedLikesInfo: ExtendedLikesInfo;
+  likesCount: number;
+  dislikesCount: number;
+  // myStatus: 'None' | 'Like' | 'Dislike' | null;
 }

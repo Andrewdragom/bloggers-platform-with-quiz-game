@@ -5,11 +5,11 @@ import { CreateUserDto } from '../../dto/create-user.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { Session } from './session.entity';
 import { BaseEntity } from '../../../../core/domain/entities/base.entity';
+import { Comment } from '../../../bloggers-platform/domain/entities/comment.entity';
+import { LikesForComment } from '../../../bloggers-platform/domain/entities/likeForComment.entity';
 
 @Entity()
 export class User extends BaseEntity {
-  // @PrimaryColumn('uuid')
-  // id: string;
   @Column()
   login: string;
   @Column()
@@ -18,8 +18,6 @@ export class User extends BaseEntity {
   passwordHash: string;
   @Column()
   passwordSalt: string;
-  // @Column()
-  // createdAt: Date;
 
   @OneToMany(
     () => EmailConfirmation,
@@ -34,6 +32,12 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Session, (session) => session.userId)
   sessions: Session[];
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
+
+  @OneToMany(() => LikesForComment, (likesForComment) => likesForComment.user)
+  likesForComments: LikesForComment[];
 
   static createInstance(dto: CreateUserDto, passwordHash, passwordSalt): User {
     const user = new User();
