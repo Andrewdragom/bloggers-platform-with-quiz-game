@@ -1,0 +1,121 @@
+import { INestApplication } from '@nestjs/common';
+import { Connection } from 'typeorm';
+import { clearBDAfterEachTest, getApp } from '../utils-test/utils';
+import { createBlog } from '../utils-test/blog.utils';
+import request from 'supertest';
+import { createPost } from '../utils-test/post.utils';
+import { loginUser } from '../utils-test/user.utils';
+import { CreateLikeStatusInputDto } from '../../src/modules/bloggers-platform/api/input-dto/dto-likes/like-status-input.dto';
+
+describe('Posts - /blogs/blogId/posts (2e2)', () => {
+  const post = {
+    title: 'Test Post',
+    shortDescription: 'Test description',
+    content: 'pipipi....',
+  };
+
+  const blog = {
+    name: 'Test Blog',
+    description: 'Test description',
+    websiteUrl: 'https://andreasdragomirov.com',
+  };
+
+  const user = {
+    login: 'andrew',
+    password: 'dadada',
+    email: 'andreasdragomirov@yandex.com',
+  };
+  const user2 = {
+    login: 'andrew2',
+    password: 'dadada',
+    email: 'andreasdragomirov2@yandex.com',
+  };
+
+  const like = {
+    likeStatus: 'Like',
+  };
+  const dislike = {
+    likeStatus: 'Dislike',
+  };
+
+  let app: INestApplication;
+  let connection: Connection;
+
+  beforeAll(async () => {
+    app = await getApp();
+    await app.init();
+    connection = app.get(Connection);
+  });
+
+  it('Create post [POST /blogs/blogId/posts]', async () => {
+    const newBlog = await createBlog(blog, app);
+    await createPost(post, newBlog, app);
+  });
+
+  it(
+    'Send like-status for post from user1 and user2 and change like-status user2' +
+      '  [POST /posts/postId/like-status] and check this post [GET /posts/postId]',
+    async () => {
+      const newBlog = await createBlog(blog, app);
+      const newPost = await createPost(post, newBlog, app);
+      const token = await loginUser(user, app);
+      // отправка лайка от юзера 1
+      await request(app.getHttpServer())
+        .put(`/posts/${newPost.id}/like-status`)
+        .set('Authorization', `Bearer ${token.accessToken}`)
+        .send(like as CreateLikeStatusInputDto)
+        .expect(204);
+      //логин 2 юзера
+      const token2 = await loginUser(user2, app);
+      // отправка дизлайка от юзера 2
+      await request(app.getHttpServer())
+        .put(`/posts/${newPost.id}/like-status`)
+        .set('Authorization', `Bearer ${token2.accessToken}`)
+        .send(dislike as CreateLikeStatusInputDto)
+        .expect(204);
+      // отправка лайка от юзера 2 (изменение статуса)
+      await request(app.getHttpServer())
+        .put(`/posts/${newPost.id}/like-status`)
+        .set('Authorization', `Bearer ${token2.accessToken}`)
+        .send(like as CreateLikeStatusInputDto)
+        .expect(204);
+      // запрос - проверка поста по айди
+      const { body } = await request(app.getHttpServer())
+        .get(`/posts/${newPost.id}`)
+        .auth('admin', 'qwerty')
+        .expect(200);
+
+      expect(body).toEqual({
+        ...post,
+        id: expect.any(String),
+        blogId: newBlog.id,
+        blogName: newBlog.name,
+        createdAt: expect.any(String),
+        extendedLikesInfo: {
+          likesCount: 2,
+          dislikesCount: 0,
+          myStatus: 'None',
+          newestLikes: [
+            {
+              addedAt: expect.any(String),
+              userId: expect.any(String),
+              login: user2.login,
+            },
+            {
+              addedAt: expect.any(String),
+              userId: expect.any(String),
+              login: user.login,
+            },
+          ],
+        },
+      });
+    },
+  );
+
+  afterEach(async () => {
+    await clearBDAfterEachTest(connection);
+  });
+  afterAll(async () => {
+    await app.close(); // обязательно
+  });
+});

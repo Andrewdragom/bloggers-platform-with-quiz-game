@@ -1,8 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { PostsRepository } from '../infrastructure/mongoDb/posts.repository';
-import { LikeStatusRepository } from '../infrastructure/mongoDb/like-status.repository';
 import { CreatePostDto } from '../api/input-dto/dto-posts/create-post.dto';
-import { BlogsRepository } from '../infrastructure/mongoDb/blogs.repository';
 import { Post } from '../domain/posts.schema';
 import { UsersService } from '../../users-account/application/users.service';
 import { CreatePostByBlogInputDto } from '../api/input-dto/dto-blogs/create-post-by-blog-input-dto';
@@ -17,10 +14,6 @@ import { LikeStatusForPostsQueryRepositoryTypeOrm } from '../infrastructure/type
 @Injectable()
 export class PostsService {
   constructor(
-    @Inject(PostsRepository) protected postsRepository: PostsRepository,
-    @Inject(LikeStatusRepository)
-    protected likeStatusRepository: LikeStatusRepository,
-    @Inject(BlogsRepository) protected blogsRepository: BlogsRepository,
     @Inject(UsersService) protected usersService: UsersService,
     @Inject(BlogsRepositoryPostgres)
     protected blogsRepositoryPostgres: BlogsRepositoryPostgres,
@@ -127,23 +120,23 @@ export class PostsService {
     }
     return true;
   }
-  async updatePost(id: string | null | undefined, body: CreatePostDto) {
-    const getBlog = await this.blogsRepositoryPostgres.findBlogById(
-      body.blogId,
-    );
-    if (!getBlog)
-      throw new NotFoundException(`Blog with ID ${body.blogId} not found`);
-
-    const update = await this.postsRepository.updatePostById(
-      id,
-      body.title,
-      body.content,
-      body.shortDescription,
-      body.blogId,
-      getBlog.name,
-    );
-    if (!update) throw new NotFoundException(`Not update`);
-  }
+  // async updatePost(id: string | null | undefined, body: CreatePostDto) {
+  //   const getBlog = await this.blogsRepositoryPostgres.findBlogById(
+  //     body.blogId,
+  //   );
+  //   if (!getBlog)
+  //     throw new NotFoundException(`Blog with ID ${body.blogId} not found`);
+  //
+  //   const update = await this.postsRepository.updatePostById(
+  //     id,
+  //     body.title,
+  //     body.content,
+  //     body.shortDescription,
+  //     body.blogId,
+  //     getBlog.name,
+  //   );
+  //   if (!update) throw new NotFoundException(`Not update`);
+  // }
   async updatePostByBlogId(
     id: string | null | undefined,
     body: CreatePostByBlogInputDto,

@@ -1,5 +1,5 @@
 import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 // export class GetBlogsQueryParams {
 //   pageNumber: number;
@@ -28,6 +28,7 @@ export class GetBlogsQueryDto {
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
+  @Transform(({ value }) => (value ? value.toLowerCase() : 'desc'))
   sortDirection: 'asc' | 'desc' = 'desc';
 
   @IsOptional()

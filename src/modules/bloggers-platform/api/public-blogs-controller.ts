@@ -39,7 +39,7 @@ export class PublicBlogsController {
   async getPostsByBlogId(
     @Param('id') id: string,
     @Query() query: GetPostsQueryDto,
-    @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto,
+    @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto | null,
   ) {
     const getBlog = await this.blogsService.findBlogById(id);
 

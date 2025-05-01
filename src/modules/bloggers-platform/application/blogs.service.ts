@@ -1,7 +1,4 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { BlogsRepository } from '../infrastructure/mongoDb/blogs.repository';
-import { PostsRepository } from '../infrastructure/mongoDb/posts.repository';
-import { LikeStatusRepository } from '../infrastructure/mongoDb/like-status.repository';
 import { UsersService } from '../../users-account/application/users.service';
 import { BlogsRepositoryPostgres } from '../infrastructure/postgres/blogs.repositoryPostgres';
 import { PostsRepositoryPostgres } from '../infrastructure/postgres/posts.repositoryPostgres';
@@ -18,10 +15,6 @@ import { LikeStatusForPostsQueryRepositoryTypeOrm } from '../infrastructure/type
 @Injectable()
 export class BlogsService {
   constructor(
-    @Inject(BlogsRepository) protected blogsRepository: BlogsRepository,
-    @Inject(PostsRepository) protected postsRepository: PostsRepository,
-    @Inject(LikeStatusRepository)
-    protected likeStatusRepository: LikeStatusRepository,
     @Inject(UsersService) protected usersService: UsersService,
     @Inject(BlogsRepositoryPostgres)
     protected blogsRepositoryPostgres: BlogsRepositoryPostgres,

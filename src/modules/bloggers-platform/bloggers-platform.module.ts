@@ -1,19 +1,10 @@
 import { Module } from '@nestjs/common';
 import { SuperAdminBlogsController } from './api/super-admin-blogs.controller';
 import { BlogsService } from './application/blogs.service';
-import { BlogsRepository } from './infrastructure/mongoDb/blogs.repository';
-import { PostsRepository } from './infrastructure/mongoDb/posts.repository';
-import { MongooseModule } from '@nestjs/mongoose';
-import { BlogSchema } from './domain/blogs.schema';
 import { PostsService } from './application/posts.service';
-import { PostSchema } from './domain/posts.schema';
-import { LikeSchema } from './domain/likes.schema';
-import { LikeStatusRepository } from './infrastructure/mongoDb/like-status.repository';
 import { PostsController } from './api/posts.controller';
-import { CommentSchema } from './domain/comments.schema';
 import { CommentsController } from './api/comments.controller';
 import { CommentsService } from './application/comments.service';
-import { CommentsRepository } from './infrastructure/mongoDb/comments.repository';
 import { UserAccountModule } from '../users-account/user-account.module';
 import { IsBlogIdExistConstraint } from './api/input-dto/dto-blogs/customValidators/IsBlogIdExist-custom-validator';
 import { BlogsRepositoryPostgres } from './infrastructure/postgres/blogs.repositoryPostgres';
@@ -70,24 +61,24 @@ const CommandHandlers = [
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      {
-        name: 'blogs',
-        schema: BlogSchema,
-      },
-      {
-        name: 'posts',
-        schema: PostSchema,
-      },
-      {
-        name: 'likeStatus',
-        schema: LikeSchema,
-      },
-      {
-        name: 'comments',
-        schema: CommentSchema,
-      },
-    ]),
+    // MongooseModule.forFeature([
+    //   {
+    //     name: 'blogs',
+    //     schema: BlogSchema,
+    //   },
+    //   {
+    //     name: 'posts',
+    //     schema: PostSchema,
+    //   },
+    //   {
+    //     name: 'likeStatus',
+    //     schema: LikeSchema,
+    //   },
+    //   {
+    //     name: 'comments',
+    //     schema: CommentSchema,
+    //   },
+    // ]),
     UserAccountModule,
     TypeOrmModule.forFeature([
       Blog,
@@ -106,12 +97,12 @@ const CommandHandlers = [
   ],
   providers: [
     BlogsService,
-    BlogsRepository,
-    PostsRepository,
+    // BlogsRepository,
+    // PostsRepository,
     PostsService,
-    LikeStatusRepository,
+    // LikeStatusRepository,
     CommentsService,
-    CommentsRepository,
+    // CommentsRepository,
     IsBlogIdExistConstraint,
     BlogsRepositoryPostgres,
     PostsRepositoryPostgres,
@@ -134,24 +125,24 @@ const CommandHandlers = [
     LikeStatusForPostsRepositoryTypeOrm,
   ],
   exports: [
-    MongooseModule.forFeature([
-      {
-        name: 'blogs',
-        schema: BlogSchema,
-      },
-      {
-        name: 'posts',
-        schema: PostSchema,
-      },
-      {
-        name: 'likeStatus',
-        schema: LikeSchema,
-      },
-      {
-        name: 'comments',
-        schema: CommentSchema,
-      },
-    ]),
+    // MongooseModule.forFeature([
+    //   {
+    //     name: 'blogs',
+    //     schema: BlogSchema,
+    //   },
+    //   {
+    //     name: 'posts',
+    //     schema: PostSchema,
+    //   },
+    //   {
+    //     name: 'likeStatus',
+    //     schema: LikeSchema,
+    //   },
+    //   {
+    //     name: 'comments',
+    //     schema: CommentSchema,
+    //   },
+    // ]),
   ],
 })
 export class BloggersPlatformModule {}

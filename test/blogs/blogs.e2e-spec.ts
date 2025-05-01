@@ -1,0 +1,73 @@
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { clearBDAfterEachTest, getApp } from '../utils-test/utils';
+import { Connection, getConnection } from 'typeorm';
+import { createBlog } from '../utils-test/blog.utils';
+
+describe('blogs - /blogs (e2e)', () => {
+  const blog = {
+    name: 'Test Blog',
+    description: 'Test description',
+    websiteUrl: 'https://andreasdragomirov.com',
+  };
+  let app: INestApplication;
+  let connection: Connection;
+
+  beforeAll(async () => {
+    app = await getApp();
+    await app.init();
+    connection = app.get(Connection);
+  });
+
+  it('Create [POST sa/blogs]', async () => {
+    await createBlog(blog, app);
+  });
+
+  it('Create 12 blogs and verify [POST sa/blogs, GET sa/blogs]', async () => {
+    const createdBlogs: any[] = [];
+
+    // Создаем 12 блогов с уникальными данными
+    for (let i = 1; i <= 12; i++) {
+      const blog = {
+        name: `Test Blog ${i}`,
+        description: `Test description for blog ${i}`,
+        websiteUrl: `https://andreasdragomirov${i}.com`,
+      };
+      createdBlogs.push(await createBlog(blog, app)); // Сохраняем созданный блог
+    }
+
+    // Проверяем, что все 12 блогов возвращаются через GET /blogs
+    const { body } = await request(app.getHttpServer())
+      .get(
+        '/sa/blogs?pageNumber=1&pageSize=20&sortBy=createdAt&sortDirection=desc',
+      )
+      .auth('admin', 'qwerty')
+      .expect(200);
+
+    // Проверяем структуру ответа
+    expect(body).toEqual({
+      pagesCount: expect.any(Number),
+      page: 1,
+      pageSize: 20,
+      totalCount: 12, // Ожидаем ровно 12 блогов
+      items: expect.arrayContaining(
+        createdBlogs.map((blog) =>
+          expect.objectContaining({
+            id: blog.id,
+            name: blog.name,
+            description: blog.description,
+            websiteUrl: blog.websiteUrl,
+            createdAt: expect.any(String),
+            isMembership: expect.any(Boolean),
+          }),
+        ),
+      ),
+    });
+  });
+  afterEach(async () => {
+    await clearBDAfterEachTest(connection);
+  });
+  afterAll(async () => {
+    await app.close(); // обязательно
+  });
+});

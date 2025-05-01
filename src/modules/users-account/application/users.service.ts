@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { UsersRepositoryMongo } from '../infrastructure/users.repositoryMongo';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { EmailService } from '../../notifications/email.service';
@@ -19,8 +18,6 @@ import { PaginatedUsersResponse } from '../types/paginated-userResponse.types';
 @Injectable()
 export class UsersService {
   constructor(
-    @Inject(UsersRepositoryMongo)
-    protected usersRepository: UsersRepositoryMongo,
     @Inject(EmailService) protected emailService: EmailService,
     @Inject(UsersRepositoryPostgres)
     protected usersRepositoryPostgres: UsersRepositoryPostgres,

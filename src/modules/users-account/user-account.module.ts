@@ -1,9 +1,6 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchema } from './domain/users.schema';
+import { Module } from '@nestjs/common';
 import { UsersController } from './api/users.controller';
 import { UsersService } from './application/users.service';
-import { UsersRepositoryMongo } from './infrastructure/users.repositoryMongo';
 import { AuthController } from './api/auth.controller';
 import { LocalStrategy } from './guards/bearer/local-strategy-auth.guard';
 import { JwtStrategy } from './guards/bearer/jwt-strategy';
@@ -15,9 +12,7 @@ import { JwtConfig } from './user-account.config';
 import { CreateUserUseCase } from './application/use-cases/create-user-use-case';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JwtStrategyWithoutError } from './guards/bearer/jwt-strategy-without-error';
-import { SessionSchema } from './domain/session.schema';
 import { SessionService } from './application/session-service';
-import { SessionRepositoryMongo } from './infrastructure/session.repositoryMongo';
 import { SecurityController } from './api/security.controller';
 import { RedisService } from './application/redis-service';
 import { UsersRepositoryPostgres } from './infrastructure/users.repositoryPostgres';
@@ -36,10 +31,10 @@ const CommandHandlers = [CreateUserUseCase, DeleteUserUseCase];
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: 'users', schema: UserSchema },
-      { name: 'sessions', schema: SessionSchema },
-    ]),
+    // MongooseModule.forFeature([
+    //   { name: 'users', schema: UserSchema },
+    //   { name: 'sessions', schema: SessionSchema },
+    // ]),
     JwtModule.registerAsync({
       useFactory: (userAccountConfig: JwtConfig) => {
         return {
@@ -57,14 +52,14 @@ const CommandHandlers = [CreateUserUseCase, DeleteUserUseCase];
   controllers: [UsersController, AuthController, SecurityController],
   providers: [
     UsersService,
-    UsersRepositoryMongo,
+    // UsersRepositoryMongo,
     LocalStrategy,
     JwtStrategy,
     AuthService,
     ...CommandHandlers,
     JwtStrategyWithoutError,
     SessionService,
-    SessionRepositoryMongo,
+    // SessionRepositoryMongo,
     RedisService,
     UsersRepositoryPostgres,
     SessionRepositoryPostgres,
@@ -73,10 +68,10 @@ const CommandHandlers = [CreateUserUseCase, DeleteUserUseCase];
     SessionRepositoryTypeOrm,
   ],
   exports: [
-    MongooseModule.forFeature([
-      { name: 'users', schema: UserSchema },
-      { name: 'sessions', schema: SessionSchema },
-    ]),
+    // MongooseModule.forFeature([
+    //   { name: 'users', schema: UserSchema },
+    //   { name: 'sessions', schema: SessionSchema },
+    // ]),
     JwtModule,
     UsersService,
     UsersRepositoryTypeOrm,

@@ -16,7 +16,8 @@ export class BlogsQueryRepositoryTypeOrm {
     sortDirection: string,
     searchNameTerm: string | null,
   ) {
-    const offset = (pageNumber - 1) * pageSize;
+    // console.log(pageNumber, pageSize, sortBy, sortDirection);
+    const offset = ((pageNumber - 1) * pageSize) as number;
 
     const queryBuilder = this.blogsRepository.createQueryBuilder('b');
 
@@ -30,10 +31,9 @@ export class BlogsQueryRepositoryTypeOrm {
       sortBy === 'name' || sortBy === 'websiteUrl' || sortBy === 'createdAt'
         ? sortBy
         : 'createdAt';
-    const sortDir = sortDirection.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+    const sortDir = sortDirection?.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
     queryBuilder.orderBy(`b.${sortColumn}`, sortDir);
-
-    queryBuilder.limit(pageSize).offset(offset);
+    queryBuilder.limit(pageSize).offset(Number(offset));
 
     return queryBuilder.getMany();
   }

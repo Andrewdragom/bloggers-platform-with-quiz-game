@@ -1,6 +1,4 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { LikeStatusRepository } from '../infrastructure/mongoDb/like-status.repository';
-import { CommentsRepository } from '../infrastructure/mongoDb/comments.repository';
 import { CommentsRepositoryPostgres } from '../infrastructure/postgres/comments.repositoryPostgres';
 import { LikeStatusForCommentsRepositoryPostgres } from '../infrastructure/postgres/like-status-for-comments.repositoryPostgres';
 import { CommentsQueryRepositoryTypeOrm } from '../infrastructure/typeOrm/comments.queryRepositoryTypeOrm';
@@ -10,10 +8,6 @@ import { PostsQueryRepositoryTypeOrm } from '../infrastructure/typeOrm/posts.que
 @Injectable()
 export class CommentsService {
   constructor(
-    @Inject(LikeStatusRepository)
-    protected likeStatusRepository: LikeStatusRepository,
-    @Inject(CommentsRepository)
-    protected commentsRepository: CommentsRepository,
     @Inject(CommentsRepositoryPostgres)
     protected commentsRepositoryPostgres: CommentsRepositoryPostgres,
     @Inject(LikeStatusForCommentsRepositoryPostgres)

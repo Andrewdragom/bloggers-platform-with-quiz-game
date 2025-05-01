@@ -3,14 +3,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { SessionRepositoryMongo } from '../infrastructure/session.repositoryMongo';
 import { SessionRepositoryPostgres } from '../infrastructure/session.repositoryPostgres';
 import { SessionRepositoryTypeOrm } from '../infrastructure/session.repositoryTypeOrm';
 
 export class SessionService {
   constructor(
-    @Inject(SessionRepositoryMongo)
-    protected sessionRepo: SessionRepositoryMongo,
     @Inject(SessionRepositoryPostgres)
     protected sessionPostgresRepository: SessionRepositoryPostgres,
     @Inject(SessionRepositoryTypeOrm)
