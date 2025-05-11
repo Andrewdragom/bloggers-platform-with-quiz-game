@@ -7,6 +7,8 @@ import { Session } from './session.entity';
 import { BaseEntity } from '../../../../core/domain/entities/base.entity';
 import { Comment } from '../../../bloggers-platform/domain/entities/comment.entity';
 import { LikesForComment } from '../../../bloggers-platform/domain/entities/likeForComment.entity';
+import { Game } from '../../../quiz/domain/entities/game.entity';
+import { Answer } from '../../../quiz/domain/entities/answer.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -38,6 +40,13 @@ export class User extends BaseEntity {
 
   @OneToMany(() => LikesForComment, (likesForComment) => likesForComment.user)
   likesForComments: LikesForComment[];
+
+  @OneToMany(() => Game, (game) => game.firstPlayer)
+  game1: Game[];
+  @OneToMany(() => Game, (game) => game.secondPlayer)
+  game2: Game[];
+  @OneToMany(() => Answer, (answer) => answer.user)
+  answers: Answer[];
 
   static createInstance(dto: CreateUserDto, passwordHash, passwordSalt): User {
     const user = new User();

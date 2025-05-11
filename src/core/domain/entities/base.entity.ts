@@ -7,6 +7,6 @@ export abstract class BaseEntity {
   @CreateDateColumn()
   public createdAt: Date;
 
-  @UpdateDateColumn()
-  public updatedAt: Date;
+  @UpdateDateColumn({ type: 'timestamp', nullable: true, default: null })
+  public updatedAt: Date | null;
 }

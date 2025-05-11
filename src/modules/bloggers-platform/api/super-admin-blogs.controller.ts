@@ -25,7 +25,6 @@ import { CreateBlogCommand } from '../application/use-cases/blogs/create-blog-us
 import { GetBlogsQueryDto } from './input-dto/dto-blogs/get-blogs-query-params-input.dto';
 import { GetPostsQueryDto } from './input-dto/dto-posts/get-posts-query-params.dto';
 import { PaginatedBlogsResponse } from '../types/paginated-blogsResponse.types';
-import { Blog } from '../domain/blogs.schema';
 import { DeleteBlogCommand } from '../application/use-cases/blogs/delete-blog-use-case';
 import { UpdateBlogCommand } from '../application/use-cases/blogs/update-blog-use-case';
 import { CreatePostCommand } from '../application/use-cases/posts/create-post-use-case';

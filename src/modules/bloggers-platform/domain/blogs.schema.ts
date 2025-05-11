@@ -25,16 +25,16 @@ export class Blog {
   @Prop()
   isMembership: boolean;
 
-  static createInstance(dto: CreateBlogDto): BlogDocument {
-    const blog = new Blog();
-    blog.id = crypto.randomUUID();
-    blog.name = dto.name;
-    blog.description = dto.description;
-    blog.websiteUrl = dto.websiteUrl;
-    blog.createdAt = new Date();
-    blog.isMembership = false;
-
-    return blog as BlogDocument;
-  }
+  // static createInstance(dto: CreateBlogDto): BlogDocument {
+  //   const blog = new Blog();
+  //   blog.id = crypto.randomUUID();
+  //   blog.name = dto.name;
+  //   blog.description = dto.description;
+  //   blog.websiteUrl = dto.websiteUrl;
+  //   blog.createdAt = new Date();
+  //   blog.isMembership = false;
+  //
+  //   return blog as BlogDocument;
+  // }
 }
 export const BlogSchema = SchemaFactory.createForClass(Blog);

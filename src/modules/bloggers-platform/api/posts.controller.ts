@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   Inject,
@@ -12,12 +11,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BlogsService } from '../application/blogs.service';
-import {
-  GetPostsQueryDto,
-  GetPostsQueryParams,
-} from './input-dto/dto-posts/get-posts-query-params.dto';
+import { GetPostsQueryDto } from './input-dto/dto-posts/get-posts-query-params.dto';
 import { PostsService } from '../application/posts.service';
-import { CreatePostDto } from './input-dto/dto-posts/create-post.dto';
 import { CommentsService } from '../application/comments.service';
 import { JwtAuthGuard } from '../../users-account/guards/bearer/jwt-auth.guard';
 import { ExtractUserFromRequest } from '../../users-account/guards/bearer/decorators/extract-user-from-request';
@@ -26,7 +21,6 @@ import { CreateCommentInputDto } from './input-dto/dto-comments/create-comment-i
 import { UsersService } from '../../users-account/application/users.service';
 import { JwtAuthGuardWithoutError } from '../../users-account/guards/bearer/jwt-auth-without-error.guard';
 import { CreateLikeStatusInputDto } from './input-dto/dto-likes/like-status-input.dto';
-import { AuthGuardBasicAuth } from '../../users-account/guards/basic/basic-auth.guard';
 import { CommandBus } from '@nestjs/cqrs';
 import { CreateCommentCommand } from '../application/use-cases/comments/create-comment-use-case';
 import { SendLikeStatusForPostCommand } from '../application/use-cases/posts/send-like-status-for-post-use-case';
