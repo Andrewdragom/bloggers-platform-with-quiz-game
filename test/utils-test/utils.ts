@@ -15,6 +15,7 @@ import {
 import { ValidationError } from '../../src/core/exception/interface-errors';
 import cookieParser from 'cookie-parser';
 import { HttpExceptionFilter } from '../../src/core/exception/exception-filter';
+import { QuizGameModule } from '../../src/modules/quiz/quiz-game.module';
 
 export const getApp = async () => {
   let app: INestApplication;
@@ -27,6 +28,7 @@ export const getApp = async () => {
       JwtConfigModule,
       configModule,
       CoreModule,
+      QuizGameModule,
     ],
     providers: [ConfigService],
   }).compile();

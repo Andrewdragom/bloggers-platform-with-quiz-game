@@ -3,7 +3,6 @@ import { BaseEntity } from '../../../../core/domain/entities/base.entity';
 import { User } from '../../../users-account/domain/entities/user.entity';
 import { Game } from './game.entity';
 import { Question } from './question.entity';
-import { CreateQuestionDto } from '../../api/input-dto/create-question.dto';
 
 @Entity()
 export class Answer extends BaseEntity {

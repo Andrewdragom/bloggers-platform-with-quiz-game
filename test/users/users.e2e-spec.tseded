@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Connection } from 'typeorm';
-import { clearBDAfterEachTest, getApp } from '../utils-test/utils';
-import { createUser, loginUser } from '../utils-test/user.utils';
+import { clearBDAfterEachTest, getApp } from '../../utils-test/utils';
+import { createUser, loginUser } from '../../utils-test/user.utils';
 
 describe('users - /users (e2e) and auth /auth (e2e)', () => {
   const user = {

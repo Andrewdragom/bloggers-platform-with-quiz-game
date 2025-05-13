@@ -52,4 +52,48 @@ export class GameQueryRepositoryTypeOrm {
       ],
     });
   }
+  async findAllGamesForUser(
+    pageNumber: number,
+    pageSize: number,
+    sortBy: string,
+    sortDirection: string,
+    userId: string | null,
+  ) {
+    const offset = (pageNumber - 1) * pageSize;
+    const queryBuilder = this.gameRepository
+      .createQueryBuilder('g')
+      .select([
+        'g.id as "id"',
+        'g.scoreFirstPlayer as "scoreFirstPlayer"',
+        'g.scoreSecondPlayer as "scoreSecondPlayer"',
+        'g.pending as "status"',
+        'g.pairCreatedDate as "pairCreatedDate"',
+        'g.startGameDate as "startGameDate"',
+        'g.finishGameDate as "finishGameDate"',
+      ])
+      .where('g.firstPlayerId = :userId OR g.secondPlayerId = :userId', {
+        userId,
+      });
+
+    const sortColumn =
+      sortBy === 'status' ||
+      sortBy === 'startGameDate' ||
+      sortBy === 'finishGameDate'
+        ? sortBy
+        : 'pairCreatedDate';
+    const sortDir = sortDirection?.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+    queryBuilder.orderBy(`g.${sortColumn}`, sortDir);
+    queryBuilder.limit(pageSize).offset(Number(offset));
+
+    return queryBuilder.getRawMany();
+  }
+  async getGamesCount(userId): Promise<number> {
+    const queryBuilder = this.gameRepository
+      .createQueryBuilder('g')
+      .where('g.firstPlayerId = :userId OR g.secondPlayerId = :userId', {
+        userId,
+      });
+
+    return await queryBuilder.getCount();
+  }
 }

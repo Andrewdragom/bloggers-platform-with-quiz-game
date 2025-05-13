@@ -1,8 +1,8 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { clearBDAfterEachTest, getApp } from '../utils-test/utils';
+import { clearBDAfterEachTest, getApp } from '../../utils-test/utils';
 import { Connection, getConnection } from 'typeorm';
-import { createBlog } from '../utils-test/blog.utils';
+import { createBlog } from '../../utils-test/blog.utils';
 
 describe('blogs - /blogs (e2e)', () => {
   const blog = {

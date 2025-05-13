@@ -1,11 +1,11 @@
 import { INestApplication } from '@nestjs/common';
 import { Connection } from 'typeorm';
-import { clearBDAfterEachTest, getApp } from '../utils-test/utils';
-import { createBlog } from '../utils-test/blog.utils';
+import { clearBDAfterEachTest, getApp } from '../../utils-test/utils';
+import { createBlog } from '../../utils-test/blog.utils';
 import request from 'supertest';
-import { createPost } from '../utils-test/post.utils';
-import { loginUser } from '../utils-test/user.utils';
-import { CreateLikeStatusInputDto } from '../../src/modules/bloggers-platform/api/input-dto/dto-likes/like-status-input.dto';
+import { createPost } from '../../utils-test/post.utils';
+import { loginUser } from '../../utils-test/user.utils';
+import { CreateLikeStatusInputDto } from '../../../src/modules/bloggers-platform/api/input-dto/dto-likes/like-status-input.dto';
 
 describe('Posts - /blogs/blogId/posts (2e2)', () => {
   const post = {

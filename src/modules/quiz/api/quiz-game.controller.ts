@@ -6,6 +6,7 @@ import {
   Inject,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
@@ -16,6 +17,7 @@ import { ConnectionGameCommand } from '../application/use-cases/game/connection-
 import { AnswerGameDto } from './input-dto/answer-game.dto';
 import { AnswerGameCommand } from '../application/use-cases/game/answer-game-use-case';
 import { GameService } from '../application/game.service';
+import { GetAllGamesQueryParamsDto } from './input-dto/get-all-games-query-params.dto';
 
 @Controller('pair-game-quiz/pairs')
 export class QuizGameController {
@@ -23,6 +25,7 @@ export class QuizGameController {
     @Inject(CommandBus) protected commandBus: CommandBus,
     @Inject(GameService) protected gameService: GameService,
   ) {}
+
   @UseGuards(JwtAuthGuard)
   @Post('/connection')
   @HttpCode(200)
@@ -49,6 +52,21 @@ export class QuizGameController {
     @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto,
   ) {
     return this.gameService.getCurrentGame(user.userId);
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('/my')
+  @HttpCode(200)
+  async getAllGames(
+    @ExtractUserFromRequest() user: UserCreateParamDecoratorContextDto,
+    @Query() query: GetAllGamesQueryParamsDto,
+  ) {
+    return this.gameService.getAllGamesForUser(
+      user.userId,
+      query.pageNumber,
+      query.pageSize,
+      query.sortBy,
+      query.sortDirection,
+    );
   }
   @UseGuards(JwtAuthGuard)
   @Get(':gameId')

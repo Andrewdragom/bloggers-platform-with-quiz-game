@@ -18,8 +18,6 @@ export class GameRepositoryTypeOrm {
     return await this.gameRepository.save(game);
   }
   async addScore(gameId: string, userId: string) {
-    console.log(gameId);
-
     const game = await this.gameRepository.findOneBy({ id: gameId });
     if (!game) throw new NotFoundException('Game not found');
 

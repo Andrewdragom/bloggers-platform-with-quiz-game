@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { GameQueryRepositoryTypeOrm } from '../infrastructure/game.queryRepository';
 import { UsersRepositoryTypeOrm } from '../../users-account/infrastructure/users.repositoryTypeOrm';
 import { QuestionsQueryRepositoryTypeOrm } from '../infrastructure/questions.queryRepositoryTypeOrm';
@@ -191,5 +186,82 @@ export class GameService {
       };
     }
     return currentGameForUser;
+  }
+  async getAllGamesForUser(
+    userId: string,
+    pageNumber: number,
+    pageSize: number,
+    sortBy: string,
+    sortDirection: string,
+  ) {
+    const findGames = await this.gameQueryRepositoryTypeOrm.findAllGamesForUser(
+      pageNumber,
+      pageSize,
+      sortBy,
+      sortDirection,
+      userId,
+    );
+
+    const mapFindGamesForView = await Promise.all(
+      findGames.map(async (game) => {
+        const player1 = await this.usersRepoTypeOrm.findUserByID(
+          game.firstPlayerId,
+        );
+        const player2 = await this.usersRepoTypeOrm.findUserByID(
+          game.secondPlayerId ? game.secondPlayerId : undefined,
+        );
+        //запрос за вопросами
+        const questions =
+          await this.questionsQueryRepositoryTypeOrm.getQuestionByGameId(
+            game.id,
+          );
+        //ответы первого плеера
+        const answersFirstPlayer =
+          await this.answersQueryRepository.findAnswerForCurrentGame(
+            game.id,
+            player1!.id,
+          );
+        const answersSecondPlayer =
+          await this.answersQueryRepository.findAnswerForCurrentGame(
+            game.id,
+            player2!.id,
+          );
+
+        return {
+          id: game.id,
+          firstPlayerProgress: {
+            answers: answersFirstPlayer.length > 0 ? answersFirstPlayer : [],
+            player: {
+              id: player1!.id,
+              login: player1!.login,
+            },
+            score: game.scoreFirstPlayer,
+          },
+          secondPlayerProgress: {
+            answers: answersSecondPlayer ? answersSecondPlayer : [],
+            player: {
+              id: player2!.id,
+              login: player2!.login,
+            },
+            score: game.scoreSecondPlayer,
+          },
+          questions: questions,
+          status: game.pending,
+          pairCreatedDate: game.pairCreatedDate,
+          startGameDate: game.startGameDate,
+          finishGameDate: game.finishGameDate,
+        };
+      }),
+    );
+
+    const countGames =
+      await this.gameQueryRepositoryTypeOrm.getGamesCount(userId);
+    return {
+      pagesCount: Math.ceil(countGames / pageSize),
+      page: pageNumber,
+      pageSize,
+      totalCount: countGames,
+      items: mapFindGamesForView,
+    };
   }
 }
