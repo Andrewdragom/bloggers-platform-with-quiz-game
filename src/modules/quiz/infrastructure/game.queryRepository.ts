@@ -66,6 +66,8 @@ export class GameQueryRepositoryTypeOrm {
         'g.id as "id"',
         'g.scoreFirstPlayer as "scoreFirstPlayer"',
         'g.scoreSecondPlayer as "scoreSecondPlayer"',
+        'g.firstPlayerId as "firstPlayerId"',
+        'g.secondPlayerId as "secondPlayerId"',
         'g.pending as "status"',
         'g.pairCreatedDate as "pairCreatedDate"',
         'g.startGameDate as "startGameDate"',
@@ -82,7 +84,14 @@ export class GameQueryRepositoryTypeOrm {
         ? sortBy
         : 'pairCreatedDate';
     const sortDir = sortDirection?.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
-    queryBuilder.orderBy(`g.${sortColumn}`, sortDir);
+    if (sortColumn === 'status') {
+      queryBuilder
+        .orderBy('g.pending', sortDir)
+        .addOrderBy('g.pairCreatedDate', 'DESC'); // Вторичная сортировка по дате создания пары
+    } else {
+      queryBuilder.orderBy(`g.${sortColumn}`, sortDir);
+    }
+
     queryBuilder.limit(pageSize).offset(Number(offset));
 
     return queryBuilder.getRawMany();
@@ -95,5 +104,22 @@ export class GameQueryRepositoryTypeOrm {
       });
 
     return await queryBuilder.getCount();
+  }
+
+  async findAllGamesForStatistic(userId: string | null) {
+    const queryBuilder = this.gameRepository
+      .createQueryBuilder('g')
+      .select([
+        'g.id as "id"',
+        'g.scoreFirstPlayer as "scoreFirstPlayer"',
+        'g.scoreSecondPlayer as "scoreSecondPlayer"',
+        'g.firstPlayerId as "firstPlayerId"',
+        'g.secondPlayerId as "secondPlayerId"',
+      ])
+      .where('g.firstPlayerId = :userId OR g.secondPlayerId = :userId', {
+        userId,
+      });
+
+    return queryBuilder.getRawMany();
   }
 }

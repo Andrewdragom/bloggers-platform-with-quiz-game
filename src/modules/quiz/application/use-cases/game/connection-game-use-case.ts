@@ -7,6 +7,9 @@ import { GameRepositoryTypeOrm } from '../../../infrastructure/game.repositoryTy
 import { UsersRepositoryTypeOrm } from '../../../../users-account/infrastructure/users.repositoryTypeOrm';
 import { GameQuestion } from '../../../domain/entities/game-question.entity';
 import { GameQuestionRepositoryTypeOrm } from '../../../infrastructure/gameQuestion.repositoryTypeOrm';
+import { Player } from '../../../domain/entities/player.entity';
+import { PlayerRepositoryTypeOrm } from '../../../infrastructure/player.repositoryTypeOrm';
+import { PlayerQueryRepositoryTypeOrm } from '../../../infrastructure/player.queryRepo';
 
 export class ConnectionGameCommand {
   constructor(public userId: any) {}
@@ -27,6 +30,10 @@ export class ConnectionGameUseCase
     protected usersRepoTypeOrm: UsersRepositoryTypeOrm,
     @Inject(GameQuestionRepositoryTypeOrm)
     protected gameQuestionRepositoryTypeOrm: GameQuestionRepositoryTypeOrm,
+    @Inject(PlayerRepositoryTypeOrm)
+    protected playerRepositoryTypeOrm: PlayerRepositoryTypeOrm,
+    @Inject(PlayerQueryRepositoryTypeOrm)
+    protected playerQueryRepositoryTypeOrm: PlayerQueryRepositoryTypeOrm,
   ) {}
   async execute(command: ConnectionGameCommand): Promise<any> {
     let user;
@@ -44,12 +51,21 @@ export class ConnectionGameUseCase
     // создание игры если не нашли
     if (!game) {
       user = await this.usersRepoTypeOrm.findUserByID(command.userId);
+      // ищем плеер для юзера
+      const player = await this.playerQueryRepositoryTypeOrm.findPlayer(
+        command.userId,
+      );
+      //если нету плеера создаем
+      if (!player) {
+        const createPlayer = Player.createPlayer(command.userId);
+        await this.playerRepositoryTypeOrm.savePlayer(createPlayer);
+      }
       const createGame = Game.createGameForFirstPlayer(command.userId);
       await this.gameRepositoryTypeOrm.saveGame(createGame);
       return {
         id: createGame.id,
         firstPlayerProgress: {
-          answers: [], // или пустой массив потом посмотрим
+          answers: [],
           player: {
             id: createGame.firstPlayerId,
             login: user.login,
@@ -71,8 +87,10 @@ export class ConnectionGameUseCase
     if (user.id === user2.id) {
       throw new HttpException('', 403);
     }
+    // запрашиваем 5 рандомных вопросов
     const questions =
       await this.questionsQueryRepositoryTypeOrm.getFiveRandomQuestions();
+    //связываем каждый вопрос с текущем айди игры и добавлям к ним индекс
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i];
       const questionGame = GameQuestion.createGameAndJoinQuestion(
@@ -85,6 +103,15 @@ export class ConnectionGameUseCase
     const questionMapForView = questions.map((el) => {
       return { id: el.id, body: el.body };
     });
+    //ищем плеера для юзера
+    const player = await this.playerQueryRepositoryTypeOrm.findPlayer(
+      command.userId,
+    );
+    //если нету плеера то создаем
+    if (!player) {
+      const createPlayer = Player.createPlayer(command.userId);
+      await this.playerRepositoryTypeOrm.savePlayer(createPlayer);
+    }
     game.joinSecondPlayer(command.userId, questionMapForView);
     await this.gameRepositoryTypeOrm.saveGame(game);
 

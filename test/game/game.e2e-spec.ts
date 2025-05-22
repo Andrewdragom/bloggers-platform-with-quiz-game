@@ -83,7 +83,7 @@ describe('Game - /pair-game-quiz/pairs', () => {
     //запрос - проверка текущей игры
     const game = await getCurrenGame(tokenForPlayerSecond.accessToken, app);
     // отправка ответов от первого
-    await sendAnswer('Correct answer', tokenForPlayerFirst.accessToken, app);
+    await sendAnswer('Corr answer', tokenForPlayerFirst.accessToken, app);
     await sendAnswer('Correct answer', tokenForPlayerFirst.accessToken, app);
     await sendAnswer('Incorrect answer', tokenForPlayerFirst.accessToken, app);
     await sendAnswer('Correct answer', tokenForPlayerFirst.accessToken, app);
@@ -104,7 +104,7 @@ describe('Game - /pair-game-quiz/pairs', () => {
           id: expect.any(String),
           login: user.login,
         },
-        score: 5,
+        score: 4,
       },
       secondPlayerProgress: {
         answers: expect.any(Array),
@@ -120,5 +120,41 @@ describe('Game - /pair-game-quiz/pairs', () => {
       startGameDate: expect.any(String),
       finishGameDate: expect.any(String),
     });
+
+    //подключение первого игрока
+    await request(app.getHttpServer())
+      .post(`/pair-game-quiz/pairs/connection`)
+      .set('Authorization', `Bearer ${tokenForPlayerFirst.accessToken}`)
+      .expect(200);
+    // подключение второго игрока
+    await request(app.getHttpServer())
+      .post(`/pair-game-quiz/pairs/connection`)
+      .set('Authorization', `Bearer ${tokenForPlayerSecond.accessToken}`)
+      .expect(200);
+    //отправка правильного ответа от первого икрока
+    await sendAnswer('Corre answer', tokenForPlayerFirst.accessToken, app);
+
+    //отправка правильных ответов от второго игрока
+    await sendAnswer('Correct answer', tokenForPlayerSecond.accessToken, app);
+    await sendAnswer('Correct answer', tokenForPlayerSecond.accessToken, app);
+    await sendAnswer('Correct answer', tokenForPlayerSecond.accessToken, app);
+    await sendAnswer('Correct answer', tokenForPlayerSecond.accessToken, app);
+
+    //запрос - проверка текущей игры
+    const game2 = await getCurrenGame(tokenForPlayerSecond.accessToken, app);
+    // отправка ответов от первого
+    await sendAnswer('Correct answer', tokenForPlayerFirst.accessToken, app);
+    await sendAnswer('Correct answer', tokenForPlayerFirst.accessToken, app);
+    await sendAnswer(' answer', tokenForPlayerFirst.accessToken, app);
+    await sendAnswer('Correct answer', tokenForPlayerSecond.accessToken, app);
+    // последний ответ от первого игрока
+
+    await sendAnswer('Incorrect answer', tokenForPlayerFirst.accessToken, app);
+
+    // запрос - получение игры по айди после завершения игры
+    await request(app.getHttpServer())
+      .get(`/pair-game-quiz/pairs/${game.id}`)
+      .set('Authorization', `Bearer ${tokenForPlayerSecond.accessToken}`)
+      .expect(200);
   });
 });

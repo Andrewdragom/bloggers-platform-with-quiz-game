@@ -9,6 +9,8 @@ import { GameQuestionQueryRepository } from '../../../infrastructure/gameQuestio
 import { AnswersQueryRepo } from '../../../infrastructure/answers.queryRepo';
 import { Answer } from '../../../domain/entities/answer.entity';
 import { AnswersRepo } from '../../../infrastructure/answers.repo';
+import { PlayerQueryRepositoryTypeOrm } from '../../../infrastructure/player.queryRepo';
+import { PlayerRepositoryTypeOrm } from '../../../infrastructure/player.repositoryTypeOrm';
 
 export class AnswerGameCommand {
   constructor(
@@ -35,6 +37,10 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
     @Inject(AnswersQueryRepo)
     protected answersQueryRepository: AnswersQueryRepo,
     @Inject(AnswersRepo) protected answersRepo: AnswersRepo,
+    @Inject(PlayerQueryRepositoryTypeOrm)
+    protected playerQueryRepositoryTypeOrm: PlayerQueryRepositoryTypeOrm,
+    @Inject(PlayerRepositoryTypeOrm)
+    protected playerRepositoryTypeOrm: PlayerRepositoryTypeOrm,
   ) {}
 
   async execute(command: AnswerGameCommand): Promise<any> {
@@ -127,6 +133,44 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
           getGameForFiniched.scoreSecondPlayer =
             getGameForFiniched.scoreSecondPlayer + 1;
         }
+        //подгружаем плееры для фиксации кол-ва побед ничей прогрышей суммы очков
+        const player = await this.playerQueryRepositoryTypeOrm.findPlayer(
+          getGameForFiniched!.firstPlayerId,
+        );
+        if (!player) throw new HttpException('', 403);
+        if (!getGameForFiniched!.secondPlayerId)
+          throw new HttpException('', 403);
+        const player2 = await this.playerQueryRepositoryTypeOrm.findPlayer(
+          getGameForFiniched!.secondPlayerId,
+        );
+        if (!player2) throw new HttpException('', 403);
+        //проверка кто победил
+
+        if (
+          getGameForFiniched!.scoreFirstPlayer >
+          getGameForFiniched!.scoreSecondPlayer
+        ) {
+          player.winsCount = player.winsCount + 1;
+          player2.lossesCount = player2.lossesCount + 1;
+        } else if (
+          getGameForFiniched!.scoreFirstPlayer ===
+          getGameForFiniched!.scoreSecondPlayer
+        ) {
+          player.drawsCount = player.drawsCount + 1;
+          player2.drawsCount = player2.drawsCount + 1;
+        } else if (
+          getGameForFiniched!.scoreFirstPlayer <
+          getGameForFiniched!.scoreSecondPlayer
+        ) {
+          player.lossesCount = player.lossesCount + 1;
+          player2.winsCount = player2.winsCount + 1;
+        }
+        player.sumScore =
+          player.sumScore + getGameForFiniched!.scoreFirstPlayer;
+        player2.sumScore =
+          player2.sumScore + getGameForFiniched!.scoreSecondPlayer;
+        await this.playerRepositoryTypeOrm.savePlayer(player);
+        await this.playerRepositoryTypeOrm.savePlayer(player2);
         // --------------------------------------------------------------
         getGameForFiniched!.finishGameDate = new Date();
         getGameForFiniched!.pending = 'Finished';
@@ -191,6 +235,46 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
             getGameForFiniched.scoreSecondPlayer + 1;
         }
         // --------------------------------------------------------------
+        // проверка кто победил
+        //подгружаем плееры для фиксации кол-ва побед ничей прогрышей суммы очков
+        const player = await this.playerQueryRepositoryTypeOrm.findPlayer(
+          getGameForFiniched!.firstPlayerId,
+        );
+        if (!player) throw new HttpException('', 403);
+        if (!getGameForFiniched!.secondPlayerId)
+          throw new HttpException('', 403);
+        const player2 = await this.playerQueryRepositoryTypeOrm.findPlayer(
+          getGameForFiniched!.secondPlayerId,
+        );
+        if (!player2) throw new HttpException('', 403);
+        //проверка кто победил
+
+        if (
+          getGameForFiniched!.scoreFirstPlayer >
+          getGameForFiniched!.scoreSecondPlayer
+        ) {
+          player.winsCount = player.winsCount + 1;
+          player2.lossesCount = player2.lossesCount + 1;
+        } else if (
+          getGameForFiniched!.scoreFirstPlayer ===
+          getGameForFiniched!.scoreSecondPlayer
+        ) {
+          player.drawsCount = player.drawsCount + 1;
+          player2.drawsCount = player2.drawsCount + 1;
+        } else if (
+          getGameForFiniched!.scoreFirstPlayer <
+          getGameForFiniched!.scoreSecondPlayer
+        ) {
+          player.lossesCount = player.lossesCount + 1;
+          player2.winsCount = player2.winsCount + 1;
+        }
+        player.sumScore =
+          player.sumScore + getGameForFiniched!.scoreFirstPlayer;
+        player2.sumScore =
+          player2.sumScore + getGameForFiniched!.scoreSecondPlayer;
+        await this.playerRepositoryTypeOrm.savePlayer(player);
+        await this.playerRepositoryTypeOrm.savePlayer(player2);
+        //----------------------------------------------------------------------------
         getGameForFiniched!.finishGameDate = new Date();
         getGameForFiniched!.pending = 'Finished';
         await this.gameRepositoryTypeOrm.saveGame(getGameForFiniched);

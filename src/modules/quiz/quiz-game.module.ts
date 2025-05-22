@@ -24,6 +24,9 @@ import { GameQuestionQueryRepository } from './infrastructure/gameQuestion.query
 import { AnswersQueryRepo } from './infrastructure/answers.queryRepo';
 import { AnswersRepo } from './infrastructure/answers.repo';
 import { GameService } from './application/game.service';
+import { Player } from './domain/entities/player.entity';
+import { PlayerRepositoryTypeOrm } from './infrastructure/player.repositoryTypeOrm';
+import { PlayerQueryRepositoryTypeOrm } from './infrastructure/player.queryRepo';
 
 const commandHandler = [
   CreateQuestionUseCase,
@@ -36,7 +39,7 @@ const commandHandler = [
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Question, Game, Answer, GameQuestion]),
+    TypeOrmModule.forFeature([Question, Game, Answer, GameQuestion, Player]),
     CqrsModule,
     UserAccountModule,
   ],
@@ -53,6 +56,8 @@ const commandHandler = [
     AnswersQueryRepo,
     AnswersRepo,
     GameService,
+    PlayerRepositoryTypeOrm,
+    PlayerQueryRepositoryTypeOrm,
   ],
 })
 export class QuizGameModule {}

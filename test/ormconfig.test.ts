@@ -12,6 +12,7 @@ import { Question } from '../src/modules/quiz/domain/entities/question.entity';
 import { Game } from '../src/modules/quiz/domain/entities/game.entity';
 import { GameQuestion } from '../src/modules/quiz/domain/entities/game-question.entity';
 import { Answer } from '../src/modules/quiz/domain/entities/answer.entity';
+import { Player } from '../src/modules/quiz/domain/entities/player.entity';
 
 export const testOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
@@ -19,7 +20,7 @@ export const testOrmConfig: TypeOrmModuleOptions = {
   port: 5432,
   username: 'andrew',
   password: 'andrew',
-  database: 'bloggers_platform_test',
+  database: 'BlogPlatformFour',
   entities: [
     Post,
     Blog,
@@ -34,6 +35,7 @@ export const testOrmConfig: TypeOrmModuleOptions = {
     Game,
     GameQuestion,
     Answer,
+    Player,
   ],
   synchronize: true, // Для тестов можно включить синхронизацию
   dropSchema: true, // Очищает базу перед каждым тестом

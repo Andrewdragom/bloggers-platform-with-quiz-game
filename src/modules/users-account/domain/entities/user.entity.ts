@@ -9,6 +9,7 @@ import { Comment } from '../../../bloggers-platform/domain/entities/comment.enti
 import { LikesForComment } from '../../../bloggers-platform/domain/entities/likeForComment.entity';
 import { Game } from '../../../quiz/domain/entities/game.entity';
 import { Answer } from '../../../quiz/domain/entities/answer.entity';
+import { Player } from '../../../quiz/domain/entities/player.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -47,6 +48,8 @@ export class User extends BaseEntity {
   game2: Game[];
   @OneToMany(() => Answer, (answer) => answer.user)
   answers: Answer[];
+  @OneToMany(() => Player, (player) => player.user)
+  player: Player[];
 
   static createInstance(dto: CreateUserDto, passwordHash, passwordSalt): User {
     const user = new User();
