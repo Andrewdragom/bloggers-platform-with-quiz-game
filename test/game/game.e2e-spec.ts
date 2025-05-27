@@ -156,5 +156,25 @@ describe('Game - /pair-game-quiz/pairs', () => {
       .get(`/pair-game-quiz/pairs/${game.id}`)
       .set('Authorization', `Bearer ${tokenForPlayerSecond.accessToken}`)
       .expect(200);
+
+    //------------------
+    await request(app.getHttpServer())
+      .post(`/pair-game-quiz/pairs/connection`)
+      .set('Authorization', `Bearer ${tokenForPlayerFirst.accessToken}`)
+      .expect(200);
+    // подключение второго игрока
+    await request(app.getHttpServer())
+      .post(`/pair-game-quiz/pairs/connection`)
+      .set('Authorization', `Bearer ${tokenForPlayerSecond.accessToken}`)
+      .expect(200);
+    //отправка правильного ответа от первого икрока
+    await sendAnswer('Corre answer', tokenForPlayerFirst.accessToken, app);
+
+    //отправка правильных ответов от второго игрока
+    await sendAnswer('Correct answer', tokenForPlayerSecond.accessToken, app);
+    await sendAnswer('Correct answer', tokenForPlayerSecond.accessToken, app);
+    await sendAnswer('Correct answer', tokenForPlayerSecond.accessToken, app);
+    await sendAnswer('Correct answer', tokenForPlayerSecond.accessToken, app);
+    await sendAnswer('Correct answer', tokenForPlayerSecond.accessToken, app);
   });
 });

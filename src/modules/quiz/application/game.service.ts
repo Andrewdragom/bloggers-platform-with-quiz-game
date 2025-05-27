@@ -12,6 +12,9 @@ import { isUUID } from 'class-validator';
 import { PlayerRepositoryTypeOrm } from '../infrastructure/player.repositoryTypeOrm';
 import { PlayerQueryRepositoryTypeOrm } from '../infrastructure/player.queryRepo';
 import { GetTopUsersQueryParamsDto } from '../api/input-dto/get-top-users-query-params.dto';
+import { Answer } from '../domain/entities/answer.entity';
+import { GameQuestionQueryRepository } from '../infrastructure/gameQuestion.queryRepository';
+import { AnswersRepo } from '../infrastructure/answers.repo';
 
 @Injectable()
 export class GameService {
@@ -28,6 +31,9 @@ export class GameService {
     protected playerRepositoryTypeOrm: PlayerRepositoryTypeOrm,
     @Inject(PlayerQueryRepositoryTypeOrm)
     protected playerQueryRepositoryTypeOrm: PlayerQueryRepositoryTypeOrm,
+    @Inject(GameQuestionQueryRepository)
+    protected gameQuestionQueryRepository: GameQuestionQueryRepository,
+    @Inject(AnswersRepo) protected answersRepo: AnswersRepo,
   ) {}
 
   async getCurrentGame(userId: string) {
@@ -352,5 +358,47 @@ export class GameService {
       totalCount: countPlayers,
       items: topMapToView,
     };
+  }
+  async forceFinishGame(gameId: string): Promise<void> {
+    const game = await this.gameQueryRepositoryTypeOrm.findGameByGameId(gameId);
+    if (!game) {
+      throw new NotFoundException(`Post with ID ${gameId} not found`);
+    }
+    const answers =
+      await this.answersQueryRepository.findAnswersForFinishGame(gameId);
+    const playerAnswersCount = answers.reduce(
+      (acc, ans) => {
+        acc[ans.userId] = (acc[ans.userId] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    for (const playerId of [game.firstPlayerId, game.secondPlayerId]) {
+      if (!playerId) {
+        throw new NotFoundException(`Post with ID ${playerId} not found`);
+      }
+      const count = playerAnswersCount[playerId] || 0;
+      for (let i = count + 1; i <= 5; i++) {
+        const currentQuestionId =
+          await this.gameQuestionQueryRepository.findCurrentQuestion(
+            game.id,
+            i,
+          );
+
+        const currentQuestion =
+          await this.questionsQueryRepositoryTypeOrm.findQuestionById(
+            currentQuestionId?.questionId,
+          );
+        const fakeAnswer = Answer.createInstanceAnswer(
+          '',
+          gameId,
+          playerId,
+          currentQuestion?.id,
+          false,
+        );
+        await this.answersRepo.saveAnswer(fakeAnswer);
+      }
+    }
   }
 }

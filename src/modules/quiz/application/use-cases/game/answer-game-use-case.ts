@@ -11,6 +11,7 @@ import { Answer } from '../../../domain/entities/answer.entity';
 import { AnswersRepo } from '../../../infrastructure/answers.repo';
 import { PlayerQueryRepositoryTypeOrm } from '../../../infrastructure/player.queryRepo';
 import { PlayerRepositoryTypeOrm } from '../../../infrastructure/player.repositoryTypeOrm';
+import { GameTimeoutService } from '../../game-timeout.service';
 
 export class AnswerGameCommand {
   constructor(
@@ -41,6 +42,8 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
     protected playerQueryRepositoryTypeOrm: PlayerQueryRepositoryTypeOrm,
     @Inject(PlayerRepositoryTypeOrm)
     protected playerRepositoryTypeOrm: PlayerRepositoryTypeOrm,
+    @Inject(GameTimeoutService)
+    private readonly gameTimeoutService: GameTimeoutService,
   ) {}
 
   async execute(command: AnswerGameCommand): Promise<any> {
@@ -104,10 +107,35 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
             currentGameForUser.id,
           );
         }
+
+        const opponentId =
+          command.userId === currentGameForUser.firstPlayerId
+            ? currentGameForUser.secondPlayerId
+            : currentGameForUser.firstPlayerId;
+
+        if (!opponentId) {
+          throw new HttpException('', 403);
+        }
+        const opponentAnswers =
+          await this.answersQueryRepository.findAnswerByGameIdAndUserId(
+            currentGameForUser.id,
+            opponentId,
+          );
+        if (opponentAnswers.length < 5) {
+          this.gameTimeoutService.scheduleFinishTimeout(
+            currentGameForUser.id,
+            opponentId,
+          );
+        }
         index = index + 1;
       }
       if (index === 5) {
         index = index + 1;
+        // await this.gameRepositoryTypeOrm.saveGame(currentGameForUser);
+        //
+        // this.gameTimeoutService.scheduleFinishGameTimeout(
+        //   currentGameForUser.id,
+        // );
       }
 
       const tenAnswersForFinishGame =
@@ -203,6 +231,26 @@ export class AnswerGameUseCase implements ICommandHandler<AnswerGameCommand> {
         } else if (command.userId === currentGameForUser.secondPlayerId) {
           await this.gameRepositoryTypeOrm.changeBonusScoreSecond(
             currentGameForUser.id,
+          );
+        }
+
+        const opponentId =
+          command.userId === currentGameForUser.firstPlayerId
+            ? currentGameForUser.secondPlayerId
+            : currentGameForUser.firstPlayerId;
+
+        if (!opponentId) {
+          throw new HttpException('', 403);
+        }
+        const opponentAnswers =
+          await this.answersQueryRepository.findAnswerByGameIdAndUserId(
+            currentGameForUser.id,
+            opponentId,
+          );
+        if (opponentAnswers.length < 5) {
+          this.gameTimeoutService.scheduleFinishTimeout(
+            currentGameForUser.id,
+            opponentId,
           );
         }
         index = index + 1;

@@ -27,6 +27,8 @@ import { GameService } from './application/game.service';
 import { Player } from './domain/entities/player.entity';
 import { PlayerRepositoryTypeOrm } from './infrastructure/player.repositoryTypeOrm';
 import { PlayerQueryRepositoryTypeOrm } from './infrastructure/player.queryRepo';
+import { GameTimeoutService } from './application/game-timeout.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const commandHandler = [
   CreateQuestionUseCase,
@@ -42,6 +44,7 @@ const commandHandler = [
     TypeOrmModule.forFeature([Question, Game, Answer, GameQuestion, Player]),
     CqrsModule,
     UserAccountModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [QuizQuestionsController, QuizGameController],
   providers: [
@@ -58,6 +61,7 @@ const commandHandler = [
     GameService,
     PlayerRepositoryTypeOrm,
     PlayerQueryRepositoryTypeOrm,
+    GameTimeoutService,
   ],
 })
 export class QuizGameModule {}
