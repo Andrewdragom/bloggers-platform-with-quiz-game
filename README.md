@@ -39,7 +39,7 @@
 
 ```bash
 # Клонировать репозиторий
-git clone https://github.com/your-username/bloggers-platform.git
+git clone https://github.com/Andrewdragom/bloggers-platform-with-quiz-game
 cd bloggers-platform
 
 # Установить зависимости
